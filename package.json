@@ -7,7 +7,7 @@
     "fusion": "fusion",
     "clean": "rm -rf dist/*",
     "start": "fusion start",
-    "build": "npm run clean && webpack --config ./config/webpack.base.js",
+    "build": "fusion build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
