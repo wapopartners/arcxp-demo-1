@@ -1,3 +1,5 @@
+version: 2.1
+
 default-config: &default-config
   docker:
     - image: cimg/node:current
@@ -17,7 +19,6 @@ deploy-steps: &deploy-steps
           cd deploy
           node deploy.js
 
-version: 2.1
 jobs:
   lint:
     <<: *default-config
