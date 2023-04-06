@@ -30,6 +30,7 @@ jobs:
           name: Run the Linter
           command: |
             npm run lint
+
   build:
     <<: *default-config
     steps:
