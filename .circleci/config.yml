@@ -25,7 +25,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}
+            - deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}-1680810440
       - run:
           name: Run the Linter
           command: |
@@ -37,15 +37,15 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}
-            - deps-{{ checksum "package.json" }}-
-            - deps-
+            - deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}-1680810440
+            - deps-{{ checksum "package.json" }}-1680810440
+            - deps-1680810440
       - run:
           name: Install dependencies
           command: |
             npm install --no-save
       - save_cache:
-          key: deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}
+          key: deps-{{ checksum "package.json" }}-{{ checksum "package-lock.json" }}-1680810440
           paths:
             - node_modules
       - run:
