@@ -1,9 +1,6 @@
 default-config: &default-config
   docker:
-    - image: circleci/node:10.18-browsers
-      auth:
-        username: dockeruser # Replace with your org's Docker Hub username
-        password: $DOCKERHUB_PASSWORD # Add a DOCKERHUB_PASSWORD env var to your Circle project
+    - image: circleci/node:erbium-browsers
   working_directory: ~/repo
 
 deploy-steps: &deploy-steps
