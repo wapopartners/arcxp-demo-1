@@ -17,7 +17,7 @@ deploy-steps: &deploy-steps
           cd deploy
           node deploy.js
 
-version: 2
+version: 2.1
 jobs:
   lint:
     <<: *default-config
