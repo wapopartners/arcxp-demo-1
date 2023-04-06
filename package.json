@@ -16,5 +16,8 @@
   "devDependencies": {
     "@arc-fusion/cli": "^2.0.9",
     "semver": "^7.3.8"
+  },
+  "dependencies": {
+    "webpack": "^5.78.0"
   }
 }
