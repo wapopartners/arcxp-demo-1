@@ -1,0 +1,18 @@
+{
+  "name": "pb-fusion-test-for-circleci-doc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "fusion": "fusion",
+    "start": "fusion start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@arc-fusion/cli": "^2.0.9",
+    "semver": "^7.3.8"
+  }
+}
