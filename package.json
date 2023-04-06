@@ -6,7 +6,7 @@
   "scripts": {
     "fusion": "fusion",
     "start": "fusion start",
-    "build": "fusion build",
+    "build": "npm run clean && npm run build:plugins && webpack --config ./config/webpack.base.js --env.prod",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
