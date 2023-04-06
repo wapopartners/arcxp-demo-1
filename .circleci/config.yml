@@ -1,6 +1,6 @@
 default-config: &default-config
   docker:
-    - image: circleci/node:erbium-browsers
+    - image: cimg/node:current
   working_directory: ~/repo
 
 deploy-steps: &deploy-steps
