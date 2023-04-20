@@ -46,3 +46,12 @@ jobs:
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/bundles"
           echo "EXIT: $?"
+
+      - name: Deploy the Fusion Bundle
+        run: |
+          curl -vvv \
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            -X POST
+            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}&version=latest","
+          echo "EXIT: $?"
