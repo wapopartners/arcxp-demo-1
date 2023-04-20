@@ -39,9 +39,10 @@ jobs:
 
       - name: Upload the Fusion Bundle
         run: |
-          curl \
+          curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -F "bundleName=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/services"
+          echo "EXIT: $?"
