@@ -18,6 +18,7 @@ jobs:
           echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "timestamp=$(date +%s)" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
+          echo "bundle_name=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -42,7 +43,7 @@ jobs:
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -F "bundleName=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}" \
+            -F "bundleName=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/bundles"
           echo "EXIT: $?"
@@ -53,5 +54,5 @@ jobs:
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
-            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}&version=latest"
+            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
           echo "EXIT: $?"
