@@ -8,6 +8,7 @@
     "clean": "rm -rf dist/*",
     "start": "fusion start",
     "build": "fusion build",
+    "zip": "fusion zip",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
