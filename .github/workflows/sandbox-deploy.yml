@@ -25,7 +25,7 @@ jobs:
         run: |
           npm install --prefix . @slack/client axios@0.27 form-data
 
-      - name: Deploy to ArcXP
+      - name: Build the Fusion Bundle
         run: |
-          cd deploy
-          node deploy.js
+          npm run build
+          npm run zip
