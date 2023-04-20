@@ -8,7 +8,7 @@
     "clean": "rm -rf dist/*",
     "start": "fusion start",
     "build": "fusion build",
-    "zip": "fusion zip",
+    "zip": "fusion zip --rename fusion-bundle",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
