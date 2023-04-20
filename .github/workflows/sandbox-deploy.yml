@@ -15,7 +15,7 @@ jobs:
       - name: Config settings
         run: |
           echo "environment=STAGING" >> $GITHUB_ENV
-          echo "endpoint=staging.api.arctesting2.arcpublishing.com" >> $GITHUB_ENV
+          echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "timestamp=$(date +%s)" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
