@@ -12,6 +12,13 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
+      - name: Config settings
+        run: |
+          echo "environment=STAGING" >> $GITHUB_ENV
+          echo "endpoint=staging.api.arctesting2.arcpublishing.com" >> $GITHUB_ENV
+          echo "timestamp=$(date +%s)" >> $GITHUB_ENV
+          echo "token=${{ secrets.SANDBOX_DEPLOYER_ACCESS_TOKEN }}" >> $GITHUB_ENV
+
       - name: Checkout the code
         uses: actions/checkout@v3
 
@@ -29,3 +36,13 @@ jobs:
         run: |
           npm run build
           npm run zip
+          echo "bundle_file=$(ls -d1tr dist/* | tail -n1)" >> $GITHUB_ENV
+
+      - name: Upload the Fusion Bundle
+        run: |
+          curl \
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            -F "bundleName=${{ env.timestamp }}-${{ env.GITHUB_HEAD_REF }}-${{ env.GITHUB_SHA }}" \
+            -F "bundle=@${{ env.bundle_file}}" \
+            "https://${{env.endpoint}}/deployments/fusion/services"
