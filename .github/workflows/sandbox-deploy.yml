@@ -52,6 +52,6 @@ jobs:
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -X POST
+            -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}&version=latest"
           echo "EXIT: $?"
