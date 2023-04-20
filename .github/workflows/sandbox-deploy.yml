@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Config settings
         run: |
-          echo "environment=STAGING" >> $GITHUB_ENV
+          echo "environment=SANDBOX" >> $GITHUB_ENV
           echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "timestamp=$(date +%s)" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
@@ -42,6 +42,6 @@ jobs:
           curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -F "bundleName=${{ env.timestamp }}-${{ env.GITHUB_HEAD_REF }}-${{ env.GITHUB_SHA }}" \
+            -F "bundleName=${{ env.timestamp }}-${GITHUB_HEAD_REF}-${GITHUB_SHA}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/services"
