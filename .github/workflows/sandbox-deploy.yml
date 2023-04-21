@@ -11,6 +11,8 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
     steps:
       # This step just sets some basic configs. I put it in a separate section to make it easy to change.
       - name: Config settings
@@ -78,7 +80,7 @@ jobs:
             "https://${{env.endpoint}}/deployments/fusion/services"
           if [ $? -ne 0 ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
           echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
-          if [ ${{ env.prior_version}} -ne $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
+          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
@@ -93,3 +95,8 @@ jobs:
             -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
           if [ $? -ne 0 ]; then echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."; fi
+
+      # Now it's time to promote the version!
+      - name: Promote the new version.
+        run: |
+          echo "WAIT FOR IT..."
