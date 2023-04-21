@@ -78,7 +78,7 @@ jobs:
             "https://${{env.endpoint}}/deployments/fusion/services"
           if [ $? -ne 0 ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
           echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
-          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
+          if [ ${{ env.prior_version}} -ne $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
