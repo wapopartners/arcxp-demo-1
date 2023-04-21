@@ -17,6 +17,7 @@ jobs:
       # This step just sets some basic configs. I put it in a separate section to make it easy to change.
       - name: Config settings
         run: |
+          set -eo pipefail
           echo "environment=SANDBOX" >> $GITHUB_ENV
           echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
