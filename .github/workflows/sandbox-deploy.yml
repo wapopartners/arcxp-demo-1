@@ -17,7 +17,7 @@ jobs:
           echo "environment=SANDBOX" >> $GITHUB_ENV
           echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
-          echo "bundle_name=$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "bundle_name=arcxp-demo-1-$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -31,6 +31,14 @@ jobs:
       - name: Install dependencies
         run: |
           npm install --prefix . form-data
+
+      - name: Fetch the existing current versions
+        run: |
+          curl -vvv \
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            "https://${{env.endpoint}}/deployments/fusion/services"
+          echo "EXIT: $?"          
 
       - name: Build the Fusion Bundle
         run: |
