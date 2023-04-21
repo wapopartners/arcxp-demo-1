@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install --prefix . @slack/client axios@0.27 form-data
+          npm install --prefix . form-data
 
       - name: Build the Fusion Bundle
         run: |
