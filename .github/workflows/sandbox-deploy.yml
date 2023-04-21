@@ -12,6 +12,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
+      # This step just sets some basic configs. I put it in a separate section to make it easy to change.
       - name: Config settings
         run: |
           echo "environment=SANDBOX" >> $GITHUB_ENV
@@ -19,32 +20,43 @@ jobs:
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
           echo "bundle_name=arcxp-demo-1-$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
 
+      # This checks out the code.
       - name: Checkout the code
         uses: actions/checkout@v3
 
+      # This configures NodeJS for our purposes.
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: npm
 
+      # Installs NodeJS dependencies.
       - name: Install dependencies
         run: |
           npm install --prefix . form-data
 
+      # This checks the current version before we deploy. After we upload, there should be
+      # another version number, so that'll let us know that our upload worked.
+      # We do this before the build so that we don't have to wait for the build
+      # to find out if the configs or tokens will work.
       - name: Fetch the existing current versions
         run: |
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
+            -o __VERSIONS__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
-          echo "EXIT: $?"          
+          if [ "$?" != "0" ]; then echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+          echo "prior_version=$(jq '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
 
+      # Build the code.
       - name: Build the Fusion Bundle
         run: |
           npm run build
           npm run zip
 
+      # Upload the bundle to ArcXP Fusion.
       - name: Upload the Fusion Bundle
         run: |
           curl -vvv \
@@ -53,8 +65,25 @@ jobs:
             -F "name=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/bundles"
-          echo "EXIT: $?"
+          if [ "$?" -eq "0" ]; then echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."; fi
 
+      # Verify that after the upload we have a new version.
+      - name: Verify that the Upload Worked
+        run: |
+          curl -vvv \
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            -o __VERSIONS2__.json \
+            "https://${{env.endpoint}}/deployments/fusion/services"
+          if [ "$?" -eq "0" ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+          echo "new_version=$(jq '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          if [ "${{ env.prior_version}}" -ge "${{ env.new_version }}" ]; then
+            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
+          else
+            echo "::notice title=Upload worked::Upload appears to have worked fine."
+          fi
+
+      # Deploy the new version
       - name: Deploy the Fusion Bundle
         run: |
           curl -vvv \
@@ -62,4 +91,4 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
-          echo "EXIT: $?"
+          if [ "$?" != "0" ]; then echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."; fi
