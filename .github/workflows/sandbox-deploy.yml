@@ -47,7 +47,7 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
-          if [ "$?" != "0" ]; then echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
           echo "prior_version=$(jq '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
 
       # Build the code.
@@ -65,7 +65,7 @@ jobs:
             -F "name=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/bundles"
-          if [ "$?" -eq "0" ]; then echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."; fi
 
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
@@ -75,9 +75,9 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS2__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
-          if [ "$?" -eq "0" ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
           echo "new_version=$(jq '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
-          if [ "${{ env.prior_version}}" -ge "${{ env.new_version }}" ]; then
+          if [ ${{ env.prior_version}} -ge ${{ env.new_version }} ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
@@ -91,4 +91,4 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
-          if [ "$?" != "0" ]; then echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."; fi
