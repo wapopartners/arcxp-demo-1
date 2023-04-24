@@ -91,7 +91,7 @@ jobs:
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -o __VERSIONS2__.json \
+            -o __VERSIONS__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
             
           if [ $? -ne 0 ]; then
