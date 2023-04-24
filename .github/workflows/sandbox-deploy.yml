@@ -130,7 +130,7 @@ jobs:
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -o __VERSIONS__.json \
+            -o __VERSIONS2__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
             
           if [ $? -ne 0 ]; then
@@ -138,12 +138,12 @@ jobs:
             exit 1
           fi
           
-          cat __VERSIONS__.json
+          cat __VERSIONS2__.json
           
-          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)" >> $GITHUB_ENV
           
-          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
-            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is ${{ env.new_version }}."
+          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) ]; then
+            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)."
             exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
