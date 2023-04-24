@@ -61,6 +61,7 @@ jobs:
             exit 1
           fi
           echo "prior_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          echo "oldest_version=$(jq -r '.lambdas[0].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
 
       # Build the code.
       - name: Build the Fusion Bundle
@@ -83,6 +84,35 @@ jobs:
             echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."
             exit 1
           fi
+        
+      - name: Terminate Old Version
+        if: ${{ success() }}
+        run: |
+          curl -vvv \
+          -H 'Accept: application/json' \
+          -H "Authorization: Bearer ${{ env.token }}" \
+          -X POST \
+          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
+        
+          if [ $? -ne 0 ]; then
+            echo "::error title=Terminate call failed::Terminate call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
+
+      # Deploy the new version
+      - name: Deploy the Fusion Bundle
+        if: ${{ success() }}
+        run: |
+          curl -vvv \
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            -X POST \
+            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
+            
+          if [ $? -ne 0 ]; then
+            echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
 
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
@@ -101,28 +131,12 @@ jobs:
           fi
           
           echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
-          echo "oldest_version=$(jq -r '.lambdas[0].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
           
           if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is ${{ env.new_version }}."
             exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
-          fi
-
-      # Deploy the new version
-      - name: Deploy the Fusion Bundle
-        if: ${{ success() }}
-        run: |
-          curl -vvv \
-            -H 'Accept: application/json' \
-            -H "Authorization: Bearer ${{ env.token }}" \
-            -X POST \
-            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
-            
-          if [ $? -ne 0 ]; then
-            echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."
-            exit 1
           fi
 
       # Now it's time to promote the version!
@@ -137,19 +151,5 @@ jobs:
           
           if [ $? -ne 0 ]; then
             echo "::error title=Promote call failed::Promote call failed. Try rerunning with debug flags enabled."
-            exit 1
-          fi
-        
-      - name: Terminate Old Version
-        if: ${{ success() }}
-        run: |
-          curl -vvv \
-          -H 'Accept: application/json' \
-          -H "Authorization: Bearer ${{ env.token }}" \
-          -X POST \
-          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
-        
-          if [ $? -ne 0 ]; then
-            echo "::error title=Terminate call failed::Terminate call failed. Try rerunning with debug flags enabled."
             exit 1
           fi
