@@ -99,8 +99,9 @@ jobs:
           fi
           
           echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          echo "oldest_version=$(jq -r '.lambdas[0].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
           
-          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
+          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
             exit 1
           else
@@ -126,9 +127,27 @@ jobs:
       - name: Promote the new version.
         if: ${{ success() }}
         run: |
-          echo "WAIT FOR IT..."
-      
-      - name: Undeploy Old Version
+          curl -vvv \
+          -H 'Accept: application/json' \
+          -H "Authorization: Bearer ${{ env.token }}" \
+          -X POST \
+          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.new_version }}/promote"
+          
+          if [ $? -ne 0 ]; then
+            echo "::error title=Promote call failed::Promote call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
+        
+      - name: Terminate Old Version
         if: ${{ success() }}
         run: |
-          echo "WAIT FOR IT..."
+          curl -vvv \
+          -H 'Accept: application/json' \
+          -H "Authorization: Bearer ${{ env.token }}" \
+          -X POST \
+          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
+        
+          if [ $? -ne 0 ]; then
+            echo "::error title=Terminate call failed::Terminate call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
