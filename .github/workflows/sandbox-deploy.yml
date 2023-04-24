@@ -101,3 +101,7 @@ jobs:
       - name: Promote the new version.
         run: |
           echo "WAIT FOR IT..."
+      
+      - name: Undeploy Old Version
+        run: |
+          echo "WAIT FOR IT..."
