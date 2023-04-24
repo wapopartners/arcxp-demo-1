@@ -87,6 +87,7 @@ jobs:
       - name: Verify that the Upload Worked
         if: ${{ success() }}
         run: |
+          set -x
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
