@@ -60,8 +60,11 @@ jobs:
             echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."
             exit 1
           fi
-          echo "prior_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
-          echo "oldest_version=$(jq -r '.lambdas[0].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          
+          cat __VERSIONS__.json
+
+          echo "prior_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+          echo "oldest_version=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)" >> $GITHUB_ENV
 
       # Build the code.
       - name: Build the Fusion Bundle
@@ -130,9 +133,11 @@ jobs:
             exit 1
           fi
           
-          echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          cat __VERSIONS__.json
           
-          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
+          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+          
+          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is ${{ env.new_version }}."
             exit 1
           else
