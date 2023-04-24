@@ -73,6 +73,7 @@ jobs:
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
         run: |
+          set -eo pipefail
           set -x
           curl -vvv \
             -H 'Accept: application/json' \
