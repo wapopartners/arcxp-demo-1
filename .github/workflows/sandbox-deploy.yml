@@ -50,7 +50,8 @@ jobs:
       - name: Fetch the existing current versions
         if: ${{ success() }}
         run: |
-         curl -vvv \
+          set -x
+          curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS__.json \
@@ -103,7 +104,7 @@ jobs:
           echo "oldest_version=$(jq -r '.lambdas[0].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
           
           if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
-            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
+            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is ${{ env.new_version }}."
             exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
