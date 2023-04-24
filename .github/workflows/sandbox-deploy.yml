@@ -117,6 +117,11 @@ jobs:
             exit 1
           fi
 
+      # Wait for the Fusion deployment process to work its magic
+      - name: Wait for Deployment
+        if: ${{ success() }}
+        run: sleep 30
+
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
         if: ${{ success() }}
