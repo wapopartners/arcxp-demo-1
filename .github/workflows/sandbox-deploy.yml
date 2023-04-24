@@ -16,6 +16,7 @@ jobs:
     steps:
       # This step just sets some basic configs. I put it in a separate section to make it easy to change.
       - name: Config settings
+        if: ${{ success() }}
         run: |
           set -eo pipefail
           echo "environment=SANDBOX" >> $GITHUB_ENV
@@ -25,10 +26,12 @@ jobs:
 
       # This checks out the code.
       - name: Checkout the code
+        if: ${{ success() }}
         uses: actions/checkout@v3
 
       # This configures NodeJS for our purposes.
       - name: Set up Node
+        if: ${{ success() }}
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -36,6 +39,7 @@ jobs:
 
       # Installs NodeJS dependencies.
       - name: Install dependencies
+        if: ${{ success() }}
         run: |
           npm install --prefix . form-data
 
@@ -44,23 +48,29 @@ jobs:
       # We do this before the build so that we don't have to wait for the build
       # to find out if the configs or tokens will work.
       - name: Fetch the existing current versions
+        if: ${{ success() }}
         run: |
-          curl -vvv \
+         curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
-          if [ $? -ne 0 ]; then echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then
+            echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
           echo "prior_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
 
       # Build the code.
       - name: Build the Fusion Bundle
+        if: ${{ success() }}
         run: |
           npm run build
           npm run zip
 
       # Upload the bundle to ArcXP Fusion.
       - name: Upload the Fusion Bundle
+        if: ${{ success() }}
         run: |
           curl -vvv \
             -H 'Accept: application/json' \
@@ -68,41 +78,57 @@ jobs:
             -F "name=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
             "https://${{env.endpoint}}/deployments/fusion/bundles"
-          if [ $? -ne 0 ]; then echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."; fi
+          if [ $? -ne 0 ]; then
+            echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
 
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
+        if: ${{ success() }}
         run: |
-          set -eo pipefail
-          set -x
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS2__.json \
             "https://${{env.endpoint}}/deployments/fusion/services"
-          if [ $? -ne 0 ]; then echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."; fi
+            
+          if [ $? -ne 0 ]; then
+            echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
+          
           echo "new_version=$(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json)" >> $GITHUB_ENV
+          
           if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' ./__VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot."
+            exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
           fi
 
       # Deploy the new version
       - name: Deploy the Fusion Bundle
+        if: ${{ success() }}
         run: |
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
-          if [ $? -ne 0 ]; then echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."; fi
+            
+          if [ $? -ne 0 ]; then
+            echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."
+            exit 1
+          fi
 
       # Now it's time to promote the version!
       - name: Promote the new version.
+        if: ${{ success() }}
         run: |
           echo "WAIT FOR IT..."
       
       - name: Undeploy Old Version
+        if: ${{ success() }}
         run: |
           echo "WAIT FOR IT..."
