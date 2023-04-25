@@ -149,7 +149,7 @@ jobs:
           
           echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)" >> $GITHUB_ENV
           
-          if [ ${{ env.prior_version}} -le $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) ]; then
+          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)."
             exit 1
           else
