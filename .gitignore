@@ -13,3 +13,4 @@
 !/data/restore/.gitkeep
 
 /dist
+**/*.swp
