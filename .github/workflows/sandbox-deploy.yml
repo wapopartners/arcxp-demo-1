@@ -195,6 +195,7 @@ jobs:
           -H 'Accept: application/json' \
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
+          -o __PROMOTE_OUTPUT__ \
           "https://${{ env.endpoint }}/deployments/fusion/services/${{ env.new_version }}/promote"
 
           if [ $? -ne 0 ]; then
