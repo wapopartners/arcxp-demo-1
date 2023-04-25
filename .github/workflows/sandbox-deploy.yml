@@ -75,6 +75,7 @@ jobs:
       - name: Fetch the existing current versions
         if: ${{ success() }}
         run: |
+          set -x
           curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
@@ -149,6 +150,7 @@ jobs:
       - name: Verify that the Upload Worked
         if: ${{ success() }}
         run: |
+          set -x
           KEEP_TRYING=${{ env.retry_limit }}
           CHECK_VERSION=""
 
