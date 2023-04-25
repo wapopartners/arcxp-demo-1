@@ -14,6 +14,7 @@ jobs:
 
   # This job configures the run and builds the bundle.
   config-and-build:
+    name: Configure and Build
     runs-on: ubuntu-latest
 
     permissions:
@@ -72,6 +73,8 @@ jobs:
 
   # This job deploys and promotes the bundle
   deploy-and-promote:
+    name: Deploy and Promote
+    needs: config-and-build
     runs-on: ubuntu-latest
 
     permissions:
