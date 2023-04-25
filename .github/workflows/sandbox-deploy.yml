@@ -78,6 +78,7 @@ jobs:
           curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
+            -X POST \
             -o __VERSIONS__.json \
             "https://${{ env.endpoint }}/deployments/fusion/services"
           if [ $? -ne 0 ]; then
@@ -85,8 +86,16 @@ jobs:
             exit 1
           fi
 
-          echo "prior_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
-          echo "oldest_version=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+          PRIOR_VERSION="$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)"
+          OLDEST_VERSION="$(jq -r '.lambdas[0].Version' __VERSIONS__.json)"
+
+          if [ -z $PRIOR_VERSION -o -z $OLDEST_VERSION ]; then
+            echo "::error title=Unable to determine versions::Unable to determine versions. Try rerunning with debug flags enabled.
+            exit 1
+          fi
+
+          echo "prior_version=$PRIOR_VERSION" >> $GITHUB_ENV
+          echo "oldest_version=$OLDEST_VERSION" >> $GITHUB_ENV
 
       # Upload the bundle to ArcXP Fusion.
       - name: Upload the Fusion Bundle
@@ -141,6 +150,7 @@ jobs:
         if: ${{ success() }}
         run: |
           KEEP_TRYING=${{ env.retry_limit }}
+          CHECK_VERSION=""
 
           # This retry loop is here to accommodate the time it takes for Fusion to deploy a new bundle.
           while [ $KEEP_TRYING -gt 0 ]; do
@@ -157,20 +167,26 @@ jobs:
               exit 1
             fi
 
-            if [ $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) -gt ${{ env.prior_version }} ]; then
+            CHECK_VERSION=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)
+            if [ -z $CHECK_VERSION ]; then
+              echo "::error title=Unable to determine version post-deploy::Unable to parse the version number following the deployment. Try rerunning with debug flags enabled."
+              exit 1
+            fi
+
+            if [ $CHECK_VERSION -gt ${{ env.prior_version }} ]; then
               break
             fi
             sleep ${{ env.retry_delay }}
           done
 
-          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
-
-          if [ ${{ env.prior_version }} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
-            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS__.json)."
+          if [ ${{ env.prior_version }} -ge $CHECK_VERSION ]; then
+            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $CHECK_VERSION."
             exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
           fi
+
+          echo "new_version=$CHECK_VERSION" >> $GITHUB_ENV
 
       # Now it's time to promote the version!
       - name: Promote the new version.
