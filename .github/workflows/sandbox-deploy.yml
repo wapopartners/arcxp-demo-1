@@ -27,11 +27,11 @@ jobs:
         # This is where you can change parameters which control this
         # GitHub Action.
         env:
-          API_HOSTNAME="api.sandbox.arctesting2.arcpublishing.com"
-          API_TOKEN="${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
-          BUNDLE_NAME_PREFIX="arcxp-demo-1"
-          RETRY_LIMIT=60
-          RETRY_DELAY=5
+          API_HOSTNAME: "api.sandbox.arctesting2.arcpublishing.com"
+          API_TOKEN: "${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
+          BUNDLE_NAME_PREFIX: "arcxp-demo-1"
+          RETRY_LIMIT: 60
+          RETRY_DELAY: 5
 
         ## DO NOT CHANGE ANYTHING BELOW THIS LINE
         ## UNLESS YOU KNOW WHAT YOU'RE DOING
