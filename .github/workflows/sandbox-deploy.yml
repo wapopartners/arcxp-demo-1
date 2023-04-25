@@ -15,9 +15,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
       # This step just sets some basic configs. Use this section
       # to change parameters for your organization.
