@@ -23,6 +23,8 @@ jobs:
           echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
           echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
           echo "bundle_name=arcxp-demo-1-$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "retry_count=30" >> $GITHUB_ENV
+          echo "retry_delay=10" >> $GITHUB_ENV
 
       # This checks out the code.
       - name: Checkout the code
@@ -117,28 +119,33 @@ jobs:
             exit 1
           fi
 
-      # Wait for the Fusion deployment process to work its magic
-      - name: Wait for Deployment
-        if: ${{ success() }}
-        run: sleep 30
-
       # Verify that after the upload we have a new version.
       - name: Verify that the Upload Worked
         if: ${{ success() }}
         run: |
           set -x
-          curl -vvv \
-            -H 'Accept: application/json' \
-            -H "Authorization: Bearer ${{ env.token }}" \
-            -o __VERSIONS2__.json \
-            "https://${{env.endpoint}}/deployments/fusion/services"
-            
-          if [ $? -ne 0 ]; then
-            echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."
-            exit 1
-          fi
+          KEEP_TRYING=${{ env.retry_limit }}
           
-          cat __VERSIONS2__.json
+          # This retry loop is here to accommodate the time it takes for Fusion to deploy a new bundle.
+          while $KEEP_TRYING -gt 0; do
+            echo "RETRIES REMAINING: $KEEP_TRYING"
+            KEEP_TRYING=$(( KEEP_TRYING - 1 ))
+            curl -vvv \
+              -H 'Accept: application/json' \
+              -H "Authorization: Bearer ${{ env.token }}" \
+              -o __VERSIONS2__.json \
+              "https://${{env.endpoint}}/deployments/fusion/services"
+              
+            if [ $? -ne 0 ]; then
+              echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."
+              exit 1
+            fi
+            
+            if [ $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) -gt ${{ env.prior_version }} ]; then
+              break
+            fi
+            sleep ${{ env.retry_delay }}
+          done
           
           echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)" >> $GITHUB_ENV
           
