@@ -79,7 +79,7 @@ jobs:
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS__.json \
-            "https://${{env.endpoint}}/deployments/fusion/services"
+            "https://${{ env.endpoint }}/deployments/fusion/services"
           if [ $? -ne 0 ]; then
             echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."
             exit 1
@@ -87,6 +87,7 @@ jobs:
 
           echo "prior_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
           echo "oldest_version=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+
       # Upload the bundle to ArcXP Fusion.
       - name: Upload the Fusion Bundle
         if: ${{ success() }}
@@ -96,7 +97,9 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -F "name=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
-            "https://${{env.endpoint}}/deployments/fusion/bundles"
+            -o __UPLOAD_OUTPUT__ \
+            "https://${{ env.endpoint }}/deployments/fusion/bundles"
+
           if [ $? -ne 0 ]; then
             echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."
             exit 1
@@ -106,10 +109,11 @@ jobs:
         if: ${{ success() }}
         run: |
           curl \
-          -H 'Accept: application/json' \
-          -H "Authorization: Bearer ${{ env.token }}" \
-          -X POST \
-          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
+            -H 'Accept: application/json' \
+            -H "Authorization: Bearer ${{ env.token }}" \
+            -o __TERMINATE_OUTPUT__ \
+            -X POST \
+            "https://${{ env.endpoint }}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
 
           if [ $? -ne 0 ]; then
             echo "::error title=Terminate call failed::Terminate call failed. Try rerunning with debug flags enabled."
@@ -123,8 +127,9 @@ jobs:
           curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
+            -o __DEPLOY_OUTPUT__ \
             -X POST \
-            "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
+            "https://${{ env.endpoint }}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
 
           if [ $? -ne 0 ]; then
             echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."
@@ -160,7 +165,7 @@ jobs:
 
           echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
 
-          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
+          if [ ${{ env.prior_version }} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
             echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS__.json)."
             exit 1
           else
@@ -175,7 +180,7 @@ jobs:
           -H 'Accept: application/json' \
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
-          "https://${{env.endpoint}}/deployments/fusion/services/${{ env.new_version }}/promote"
+          "https://${{ env.endpoint }}/deployments/fusion/services/${{ env.new_version }}/promote"
 
           if [ $? -ne 0 ]; then
             echo "::error title=Promote call failed::Promote call failed. Try rerunning with debug flags enabled."
