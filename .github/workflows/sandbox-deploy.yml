@@ -79,7 +79,6 @@ jobs:
           curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
-            -X POST \
             -o __VERSIONS__.json \
             "https://${{ env.endpoint }}/deployments/fusion/services"
           if [ $? -ne 0 ]; then
@@ -87,8 +86,8 @@ jobs:
             exit 1
           fi
 
-          PRIOR_VERSION="$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)"
-          OLDEST_VERSION="$(jq -r '.lambdas[0].Version' __VERSIONS__.json)"
+          PRIOR_VERSION=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)
+          OLDEST_VERSION=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)
 
           if [ -z $PRIOR_VERSION -o -z $OLDEST_VERSION ]; then
             echo "::error title=Unable to determine versions::Unable to determine versions. Try rerunning with debug flags enabled.
