@@ -75,7 +75,7 @@ jobs:
       - name: Fetch the existing current versions
         if: ${{ success() }}
         run: |
-          curl -vvv \
+          curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -o __VERSIONS__.json \
@@ -91,7 +91,7 @@ jobs:
       - name: Upload the Fusion Bundle
         if: ${{ success() }}
         run: |
-          curl -vvv \
+          curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -F "name=${{ env.bundle_name }}" \
@@ -105,7 +105,7 @@ jobs:
       - name: Terminate Old Version
         if: ${{ success() }}
         run: |
-          curl -vvv \
+          curl \
           -H 'Accept: application/json' \
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
@@ -120,7 +120,7 @@ jobs:
       - name: Deploy the Fusion Bundle
         if: ${{ success() }}
         run: |
-          curl -vvv \
+          curl \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
@@ -141,7 +141,7 @@ jobs:
           while [ $KEEP_TRYING -gt 0 ]; do
             echo "RETRIES REMAINING: $KEEP_TRYING"
             KEEP_TRYING=$(( KEEP_TRYING - 1 ))
-            curl -vvv \
+            curl \
               -H 'Accept: application/json' \
               -H "Authorization: Bearer ${{ env.token }}" \
               -o __VERSIONS__.json \
@@ -171,7 +171,7 @@ jobs:
       - name: Promote the new version.
         if: ${{ success() }}
         run: |
-          curl -vvv \
+          curl \
           -H 'Accept: application/json' \
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
