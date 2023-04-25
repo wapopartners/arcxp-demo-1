@@ -1,30 +1,46 @@
 ---
 name: Deploy Fusion Bundle to Sandbox
+
 on:
   push:
+    # Adjust this list of branches if you want to use this action
+    # for PRs and pushes.
     branches:
       - sandbox
+  # This action lets you run this Action manually.
   workflow_dispatch:
 
 jobs:
-  deploy:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
     permissions:
       contents: read
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
+
     steps:
-      # This step just sets some basic configs. I put it in a separate section to make it easy to change.
+      # This step just sets some basic configs. Use this section
+      # to change parameters for your organization.
       - name: Config settings
         if: ${{ success() }}
+
+        # This is where you can change parameters which control this
+        # GitHub Action.
+        env:
+          API_HOSTNAME="api.sandbox.arctesting2.arcpublishing.com"
+          API_TOKEN="${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
+          BUNDLE_NAME_PREFIX="arcxp-demo-1"
+          RETRY_LIMIT=60
+          RETRY_DELAY=5
+
+        ## DO NOT CHANGE ANYTHING BELOW THIS LINE
+        ## UNLESS YOU KNOW WHAT YOU'RE DOING
         run: |
-          set -eo pipefail
-          echo "environment=SANDBOX" >> $GITHUB_ENV
-          echo "endpoint=api.sandbox.arctesting2.arcpublishing.com" >> $GITHUB_ENV
-          echo "token=${{ secrets.SANDBOX_DEPLOYER_TOKEN }}" >> $GITHUB_ENV
-          echo "bundle_name=arcxp-demo-1-$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "retry_limit=60" >> $GITHUB_ENV
-          echo "retry_delay=5" >> $GITHUB_ENV
+          echo "endpoint=$API_HOSTNAME" >> $GITHUB_ENV
+          echo "token=$API_TOKEN" >> $GITHUB_ENV
+          echo "bundle_name=$BUNDLE_NAME_PREFIX-$(date +%s)-${GITHUB_REF_NAME}-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "retry_limit=$RETRY_LIMIT" >> $GITHUB_ENV
+          echo "retry_delay=$RETRY_DELAY" >> $GITHUB_ENV
 
       # This checks out the code.
       - name: Checkout the code
@@ -36,6 +52,7 @@ jobs:
         if: ${{ success() }}
         uses: actions/setup-node@v3
         with:
+          #### IF YOU NEED TO CHANGE YOUR NODE VERSION, JUST CHANGE THIS NUMBER
           node-version: 18
           cache: npm
 
@@ -43,16 +60,14 @@ jobs:
       - name: Install dependencies
         if: ${{ success() }}
         run: |
-          npm install --prefix . form-data
+          npm install
 
-      # This checks the current version before we deploy. After we upload, there should be
-      # another version number, so that'll let us know that our upload worked.
-      # We do this before the build so that we don't have to wait for the build
-      # to find out if the configs or tokens will work.
+      # This checks the current version after we deploy but before we promote.
+      # After we deploy, there should be a newer version number, so that'll
+      # let us know that our upload worked.
       - name: Fetch the existing current versions
         if: ${{ success() }}
         run: |
-          set -x
           curl -vvv \
             -H 'Accept: application/json' \
             -H "Authorization: Bearer ${{ env.token }}" \
@@ -62,8 +77,6 @@ jobs:
             echo "::error title=Versions call failed::Versions call failed. Try rerunning with debug flags enabled."
             exit 1
           fi
-          
-          cat __VERSIONS__.json
 
           echo "prior_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
           echo "oldest_version=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)" >> $GITHUB_ENV
@@ -89,7 +102,7 @@ jobs:
             echo "::error title=Upload call failed::Upload call failed. Try rerunning with debug flags enabled."
             exit 1
           fi
-        
+
       - name: Terminate Old Version
         if: ${{ success() }}
         run: |
@@ -98,7 +111,7 @@ jobs:
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
           "https://${{env.endpoint}}/deployments/fusion/services/${{ env.oldest_version }}/terminate"
-        
+
           if [ $? -ne 0 ]; then
             echo "::error title=Terminate call failed::Terminate call failed. Try rerunning with debug flags enabled."
             exit 1
@@ -113,7 +126,7 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -X POST \
             "https://${{env.endpoint}}/deployments/fusion/services?bundle=${{ env.bundle_name }}&version=latest"
-            
+
           if [ $? -ne 0 ]; then
             echo "::error title=Deploy call failed::Deploy call failed. Try rerunning with debug flags enabled."
             exit 1
@@ -123,9 +136,8 @@ jobs:
       - name: Verify that the Upload Worked
         if: ${{ success() }}
         run: |
-          set -x
           KEEP_TRYING=${{ env.retry_limit }}
-          
+
           # This retry loop is here to accommodate the time it takes for Fusion to deploy a new bundle.
           while [ $KEEP_TRYING -gt 0 ]; do
             echo "RETRIES REMAINING: $KEEP_TRYING"
@@ -133,24 +145,24 @@ jobs:
             curl -vvv \
               -H 'Accept: application/json' \
               -H "Authorization: Bearer ${{ env.token }}" \
-              -o __VERSIONS2__.json \
+              -o __VERSIONS__.json \
               "https://${{env.endpoint}}/deployments/fusion/services"
-              
+
             if [ $? -ne 0 ]; then
               echo "::error title=Second versions call failed::Versions call failed. Try rerunning with debug flags enabled."
               exit 1
             fi
-            
-            if [ $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) -gt ${{ env.prior_version }} ]; then
+
+            if [ $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) -gt ${{ env.prior_version }} ]; then
               break
             fi
             sleep ${{ env.retry_delay }}
           done
-          
-          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)" >> $GITHUB_ENV
-          
-          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json) ]; then
-            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS2__.json)."
+
+          echo "new_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
+
+          if [ ${{ env.prior_version}} -ge $(jq -r '.lambdas[-1].Version' __VERSIONS__.json) ]; then
+            echo "::error title=Failed to upload the bundle::It seems like the upload to ArcXP Fusion failed. Please check the deployment tools, or re-run with debug flags enabled to further troubleshoot.\nThe old version is ${{ env.prior_version }} and the new version is $(jq -r '.lambdas[-1].Version' __VERSIONS__.json)."
             exit 1
           else
             echo "::notice title=Upload worked::Upload appears to have worked fine."
@@ -165,7 +177,7 @@ jobs:
           -H "Authorization: Bearer ${{ env.token }}" \
           -X POST \
           "https://${{env.endpoint}}/deployments/fusion/services/${{ env.new_version }}/promote"
-          
+
           if [ $? -ne 0 ]; then
             echo "::error title=Promote call failed::Promote call failed. Try rerunning with debug flags enabled."
             exit 1
