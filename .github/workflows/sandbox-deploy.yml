@@ -12,7 +12,8 @@ on:
 
 jobs:
 
-  build-and-deploy:
+  # This job configures the run and builds the bundle.
+  config-and-build:
     runs-on: ubuntu-latest
 
     permissions:
@@ -62,6 +63,22 @@ jobs:
         run: |
           npm install
 
+      # Build the code.
+      - name: Build the Fusion Bundle
+        if: ${{ success() }}
+        run: |
+          npm run build
+          npm run zip
+
+  # This job deploys and promotes the bundle
+  deploy-and-promote:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+
       # This checks the current version after we deploy but before we promote.
       # After we deploy, there should be a newer version number, so that'll
       # let us know that our upload worked.
@@ -80,14 +97,6 @@ jobs:
 
           echo "prior_version=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)" >> $GITHUB_ENV
           echo "oldest_version=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)" >> $GITHUB_ENV
-
-      # Build the code.
-      - name: Build the Fusion Bundle
-        if: ${{ success() }}
-        run: |
-          npm run build
-          npm run zip
-
       # Upload the bundle to ArcXP Fusion.
       - name: Upload the Fusion Bundle
         if: ${{ success() }}
