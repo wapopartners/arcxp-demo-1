@@ -127,7 +127,7 @@ jobs:
           KEEP_TRYING=${{ env.retry_limit }}
           
           # This retry loop is here to accommodate the time it takes for Fusion to deploy a new bundle.
-          while $KEEP_TRYING -gt 0; do
+          while [ $KEEP_TRYING -gt 0 ]; do
             echo "RETRIES REMAINING: $KEEP_TRYING"
             KEEP_TRYING=$(( KEEP_TRYING - 1 ))
             curl -vvv \
