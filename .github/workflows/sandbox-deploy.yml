@@ -82,6 +82,8 @@ jobs:
             exit 1
           fi
 
+          cat __VERSIONS__.json
+
           PRIOR_VERSION=$(jq -r '.lambdas[-1].Version' __VERSIONS__.json)
           OLDEST_VERSION=$(jq -r '.lambdas[0].Version' __VERSIONS__.json)
 
