@@ -104,6 +104,7 @@ jobs:
             -H "Authorization: Bearer ${{ env.token }}" \
             -F "name=${{ env.bundle_name }}" \
             -F "bundle=@dist/fusion-bundle.zip" \
+            -vvv \
             -o __UPLOAD_OUTPUT__ \
             "https://${{ env.endpoint }}/deployments/fusion/bundles"
 
