@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Perform the build
-            # This checks out the code.
       - name: Checkout the code
         if: ${{ success() }}
         uses: actions/checkout@v3
