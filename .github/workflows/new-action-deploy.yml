@@ -1,5 +1,5 @@
 ---
-name: Deploy Fusion Bundle to Sandbox
+name: Deploy Fusion Bundle to Sandbox with Custom Action
 
 on:
   push:
