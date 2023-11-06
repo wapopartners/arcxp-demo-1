@@ -1,0 +1,25 @@
+---
+name: Deploy Fusion Bundle to Sandbox
+
+on:
+  push:
+    # Adjust this list of branches if you want to use this action
+    # for PRs and pushes.
+    branches:
+      - sandbox
+  # This action lets you run this Action manually.
+  workflow_dispatch:
+
+jobs:
+  new-deployer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Custom Action
+        uses: arcxp/deploy-action@main
+        with:
+          org-id: arctesting2
+          api-key: "${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
+          api-hostname: api.sandbox.arctesting2.arcpublishing.com
+          bundle-prefix: action-demo-1
+
