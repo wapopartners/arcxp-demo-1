@@ -43,7 +43,7 @@ jobs:
 
       - name: Perform the deploy
         if: ${{ success() }}
-        uses: arcxp/deploy-action@main
+        uses: arcxp/deploy-action@v1
         with:
           org-id: arctesting2
           api-key: "${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
