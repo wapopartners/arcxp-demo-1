@@ -39,6 +39,7 @@ jobs:
         if: ${{ success() }}
         run: |
           echo "./node_modules/.bin" >> $GITHUB_PATH
+          echo "$PATH"
           fusion build
           fusion zip
 
