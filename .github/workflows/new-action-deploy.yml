@@ -44,7 +44,7 @@ jobs:
       - name: Build the Fusion Bundle
         if: ${{ success() }}
         run: |
-          fusion build
+          fusion build --rename fusion-bundle
           fusion zip
 
       - name: Perform the deploy
