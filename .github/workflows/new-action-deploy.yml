@@ -10,9 +10,6 @@ on:
   # This action lets you run this Action manually.
   workflow_dispatch:
 
-env:
-  PATH: "./node_modules/.bin:${{ env.PATH }}"
-
 jobs:
   new-deployer:
     runs-on: ubuntu-latest
@@ -41,6 +38,7 @@ jobs:
       - name: Build the Fusion Bundle
         if: ${{ success() }}
         run: |
+          echo "./node_modules/.bin" >> $GITHUB_PATH
           fusion build
           fusion zip
 
