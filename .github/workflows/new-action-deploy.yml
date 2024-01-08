@@ -38,8 +38,8 @@ jobs:
       - name: Build the Fusion Bundle
         if: ${{ success() }}
         run: |
-          npm run build
-          npm run zip
+          fusion build
+          fusion zip
 
       - name: Perform the deploy
         if: ${{ success() }}
