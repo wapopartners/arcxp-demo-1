@@ -56,6 +56,4 @@ jobs:
           api-hostname: api.sandbox.arctesting2.arcpublishing.com
           pagebuilder-version: 4.1.2
           bundle-prefix: action-demo-1
-          deploy: false
-          promote: true
 
