@@ -49,11 +49,13 @@ jobs:
 
       - name: Perform the deploy
         if: ${{ success() }}
-        uses: arcxp/deploy-action@v1
+        uses: arcxp/deploy-action@1-provide-finer-control-over-the-phases-of-a-bundle-deployment
         with:
           org-id: arctesting2
           api-key: "${{ secrets.SANDBOX_DEPLOYER_TOKEN }}"
           api-hostname: api.sandbox.arctesting2.arcpublishing.com
           pagebuilder-version: 4.1.2
           bundle-prefix: action-demo-1
+          deploy: false
+          promote: false
 
